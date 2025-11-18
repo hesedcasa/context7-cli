@@ -66,7 +66,7 @@ All commands:
 resolve-library-id, get-library-docs
 
 Examples:
-  npx context7-cli resolve-library-id '{"name":"mongodb"}'
+  npx context7-cli resolve-library-id '{"libraryName":"mongodb"}'
   npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/mongodb/docs"}'
   npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}'
 

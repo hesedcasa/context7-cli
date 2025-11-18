@@ -159,7 +159,7 @@ All commands:
 resolve-library-id, get-library-docs
 
 Examples:
-  >resolve-library-id {"name":"mongodb"}
+  >resolve-library-id {"libraryName":"mongodb"}
   >get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs"}
   >get-library-docs {"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}
 
