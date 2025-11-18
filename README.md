@@ -101,9 +101,11 @@ The CLI exposes **2 documentation tools** from the Context7 MCP server:
 Resolves a package/product name to a Context7-compatible library ID and returns a list of matching libraries.
 
 **Parameters:**
+
 - `name` (required): string - The package/product name to resolve (e.g., "mongodb", "next.js", "react")
 
 **Example:**
+
 ```bash
 context7> resolve-library-id {"name":"mongodb"}
 ```
@@ -113,11 +115,13 @@ context7> resolve-library-id {"name":"mongodb"}
 Fetches up-to-date documentation for a specific library, with optional topic focus and token limit.
 
 **Parameters:**
+
 - `context7CompatibleLibraryID` (required): string - Exact Context7-compatible library ID (e.g., "/mongodb/docs", "/vercel/next.js")
 - `topic` (optional): string - Focus topic for the docs (e.g., "routing", "hooks", "authentication")
 - `tokens` (optional): number - Maximum number of tokens to return (default: 10000)
 
 **Examples:**
+
 ```bash
 context7> get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs"}
 context7> get-library-docs {"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}

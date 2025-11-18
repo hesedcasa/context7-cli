@@ -47,7 +47,7 @@ describe('config/constants', () => {
 
     it('should have all lowercase kebab-case commands', () => {
       COMMANDS.forEach(cmd => {
-        expect(cmd).toMatch(/^[a-z\-]+$/);
+        expect(cmd).toMatch(/^[a-z-]+$/);
       });
     });
   });

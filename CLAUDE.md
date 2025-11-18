@@ -277,6 +277,7 @@ tests/
 ### Writing Tests
 
 Each test file follows standard Vitest patterns:
+
 - Use `describe()` blocks to group related tests
 - Use `beforeEach()`/`afterEach()` for setup/teardown
 - Mock `console.log` when testing print functions
@@ -302,6 +303,7 @@ Each test file follows standard Vitest patterns:
 - `chore:` - Maintenance tasks, dependency updates, build configuration
 
 **Examples:**
+
 ```
 feat: add pagination support for get-library-docs command
 fix: resolve JSON parsing error in headless mode
@@ -408,6 +410,7 @@ const result = await this.client.callTool(
 ### ESLint
 
 The project uses ESLint with TypeScript support:
+
 - Configuration: `eslint.config.ts`
 - Extends `@eslint/js` recommended rules
 - Uses `typescript-eslint` for TypeScript-specific linting
@@ -416,11 +419,13 @@ The project uses ESLint with TypeScript support:
 ### Prettier
 
 Code formatting is handled by Prettier with the following plugins:
+
 - `@trivago/prettier-plugin-sort-imports` - Auto-sorts imports
 
 ### Dead Code Detection
 
 Use `ts-prune` to find unused exports:
+
 ```bash
 npm run find-deadcode
 ```
@@ -428,7 +433,9 @@ npm run find-deadcode
 ### Pre-commit Hook
 
 Run formatting and dead code detection before committing:
+
 ```bash
 npm run pre-commit
 ```
+
 - use conventional commit message when creating PR

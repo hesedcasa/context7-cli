@@ -9,10 +9,7 @@ export const DEFAULT_MCP_SERVER = {
 /**
  * Available Context7 commands
  */
-export const COMMANDS: string[] = [
-  'resolve-library-id',
-  'get-library-docs',
-];
+export const COMMANDS: string[] = ['resolve-library-id', 'get-library-docs'];
 
 /**
  * Brief descriptions for each command
