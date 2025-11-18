@@ -16,6 +16,17 @@ npm start
 
 # Run in development (same as start)
 npm run dev
+
+# Run tests
+npm test                    # Run all tests once
+npm run test:watch          # Run tests in watch mode
+npm run test:ui             # Run tests with UI
+npm run test:coverage       # Run tests with coverage report
+
+# Code quality
+npm run format              # Format code with ESLint and Prettier
+npm run find-deadcode       # Find unused exports with ts-prune
+npm run pre-commit          # Run format + find-deadcode
 ```
 
 **Note**: The CLI connects to the Context7 MCP server (`@upstash/context7-mcp`) to fetch up-to-date library documentation.
@@ -28,22 +39,30 @@ This is a **modular TypeScript CLI** that provides a REPL interface for querying
 
 ```
 src/
-├── index.ts (27 lines)                    # Main entry point
+├── index.ts (28 lines)                    # Main entry point
 ├── cli/
 │   ├── index.ts                           # Barrel export
-│   └── wrapper.ts (210 lines)   # CLI class with REPL logic
+│   └── wrapper.ts (207 lines)             # CLI class with REPL logic
 ├── commands/
 │   ├── index.ts                           # Barrel export
-│   ├── helpers.ts (37 lines)              # Command info helpers
-│   └── runner.ts (59 lines)               # Headless command execution
+│   ├── helpers.ts (45 lines)              # Command info helpers
+│   └── runner.ts (55 lines)               # Headless command execution
 ├── config/
 │   ├── index.ts                           # Barrel export
-│   └── constants.ts (45 lines)            # Command definitions & server config
-├── types/
-│   └── index.ts (21 lines)                # TypeScript type definitions
+│   └── constants.ts (44 lines)            # Command definitions & server config
 └── utils/
     ├── index.ts                           # Barrel export
-    └── argParser.ts (87 lines)            # Command-line argument parser
+    └── argParser.ts (74 lines)            # Command-line argument parser
+
+tests/
+├── unit/
+│   ├── commands/
+│   │   ├── helpers.test.ts                # Tests for command helpers
+│   │   └── runner.test.ts                 # Tests for headless runner
+│   ├── config/constants.test.ts           # Tests for constants
+│   └── utils/argParser.test.ts            # Tests for argument parsing
+└── integration/
+    └── cli/wrapper.test.ts                # Tests for CLI wrapper
 ```
 
 ### Core Components
@@ -83,10 +102,6 @@ src/
 
 - `argParser.ts` - Command-line argument handling
   - `parseArguments(args)` - Parses CLI flags and routes execution
-
-#### Types Module (`src/types/`)
-
-- Shared TypeScript interfaces and type definitions
 
 ### MCP Client Integration
 
@@ -215,36 +230,57 @@ npx context7-cli --version         # Show version
 
 - `typescript@^5.0.0` - TypeScript compiler
 - `tsx@^4.0.0` - TypeScript execution runtime
-- `@types/node@^20.0.0` - Node.js type definitions
+- `@types/node@^24.10.1` - Node.js type definitions
+- `vitest@^4.0.9` - Test framework
+- `eslint@^9.39.1` - Linting
+- `prettier@3.6.2` - Code formatting
+- `ts-prune@^0.10.3` - Find unused exports
 
-## Testing and Verification
+## Testing
 
-### Manual Testing
+This project uses **Vitest** for testing with the following configuration:
 
-Key verified features:
+- **Test Framework**: Vitest with globals enabled
+- **Test Files**: `tests/**/*.test.ts`
+- **Coverage**: V8 coverage provider with text, JSON, and HTML reports
 
-- ✅ CLI connection to Context7 MCP server
-- ✅ All 2 tools discoverable
-- ✅ Interactive REPL functionality
-- ✅ Command parsing (JSON)
-- ✅ Graceful exit handling
-- ✅ Headless mode execution
-- ✅ All CLI flags working
+### Running Tests
 
-### Recommended Test Structure
+```bash
+# Run all tests once
+npm test
+
+# Watch mode for development
+npm run test:watch
+
+# Run with UI
+npm run test:ui
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Test Structure
 
 ```
 tests/
 ├── unit/
-│   ├── commands/helpers.test.ts
-│   ├── commands/runner.test.ts
-│   ├── utils/argParser.test.ts
-│   └── config/constants.test.ts
-├── integration/
-│   └── cli/wrapper.test.ts
-└── e2e/
-    └── fullFlow.test.ts
+│   ├── commands/
+│   │   ├── helpers.test.ts      # Tests for printAvailableCommands, printCommandDetail, getCurrentVersion
+│   │   └── runner.test.ts       # Tests for headless command execution
+│   ├── config/constants.test.ts # Tests for configuration constants
+│   └── utils/argParser.test.ts  # Tests for CLI argument parsing
+└── integration/
+    └── cli/wrapper.test.ts      # Tests for CLI wrapper class
 ```
+
+### Writing Tests
+
+Each test file follows standard Vitest patterns:
+- Use `describe()` blocks to group related tests
+- Use `beforeEach()`/`afterEach()` for setup/teardown
+- Mock `console.log` when testing print functions
+- Use `vi.spyOn()` and `vi.clearAllMocks()` for mocking
 
 ## Important Notes
 
@@ -253,6 +289,29 @@ tests/
 3. **MCP Ecosystem**: This CLI is a client that connects to the `@upstash/context7-mcp` server package
 4. **Barrel Exports**: Use `from './module/index.js'` for cleaner imports
 5. **No Breaking Changes**: Refactoring maintains 100% backward compatibility
+
+## Commit Message Convention
+
+**Always use Conventional Commits format** for all commit messages and PR titles:
+
+- `feat:` - New features or capabilities
+- `fix:` - Bug fixes
+- `docs:` - Documentation changes only
+- `refactor:` - Code refactoring without changing functionality
+- `test:` - Adding or modifying tests
+- `chore:` - Maintenance tasks, dependency updates, build configuration
+
+**Examples:**
+```
+feat: add pagination support for get-library-docs command
+fix: resolve JSON parsing error in headless mode
+docs: update README with new command examples
+refactor: extract MCP client connection logic into separate function
+test: add unit tests for argParser edge cases
+chore: update dependencies to latest versions
+```
+
+When creating pull requests, the PR title must follow this format. The PR description should provide additional context about what changed and why.
 
 ## Development Tips
 
@@ -289,10 +348,16 @@ tests/
 # Clean build
 rm -rf dist && npm run build
 
-# Quick test
+# Run tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Quick test of the CLI
 npm start
 
-# Test specific functionality
+# Test specific functionality (after building)
 node dist/index.js --help
 node dist/index.js --commands
 node dist/index.js resolve-library-id -h
@@ -338,15 +403,32 @@ const result = await this.client.callTool(
 - Same bundle size
 - Same startup time
 
-## Future Enhancements
+## Code Quality Tools
 
-Consider adding:
+### ESLint
 
-- Unit tests for each module
-- Integration tests with mocked MCP server
-- CI/CD pipeline
-- Logging module for structured logs
-- Validators module for input validation
-- Formatters module for output formatting
-- Support for API key authentication (--api-key flag)
-- Caching for frequently requested documentation
+The project uses ESLint with TypeScript support:
+- Configuration: `eslint.config.ts`
+- Extends `@eslint/js` recommended rules
+- Uses `typescript-eslint` for TypeScript-specific linting
+- Target: Node.js globals
+
+### Prettier
+
+Code formatting is handled by Prettier with the following plugins:
+- `@trivago/prettier-plugin-sort-imports` - Auto-sorts imports
+
+### Dead Code Detection
+
+Use `ts-prune` to find unused exports:
+```bash
+npm run find-deadcode
+```
+
+### Pre-commit Hook
+
+Run formatting and dead code detection before committing:
+```bash
+npm run pre-commit
+```
+- use conventional commit message when creating PR
