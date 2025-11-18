@@ -36,10 +36,10 @@ describe('commands/helpers', () => {
       expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('Available commands'));
     });
 
-    it('should print all 26 commands with their info', () => {
+    it('should print all 2 commands with their info', () => {
       printAvailableCommands();
-      // Should be called once for header + 26 times for commands
-      expect(consoleLogSpy).toHaveBeenCalledTimes(27);
+      // Should be called once for header + 2 times for commands
+      expect(consoleLogSpy).toHaveBeenCalledTimes(3);
     });
 
     it('should print commands with numbers', () => {
@@ -49,16 +49,16 @@ describe('commands/helpers', () => {
       expect(calls[2][0]).toMatch(/^2\./);
     });
 
-    it('should print navigate_page command', () => {
+    it('should print resolve-library-id command', () => {
       printAvailableCommands();
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('navigate_page');
+      expect(allCalls).toContain('resolve-library-id');
     });
 
     it('should print command descriptions', () => {
       printAvailableCommands();
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Clicks on the provided element');
+      expect(allCalls).toContain('Resolves a package/product name');
     });
   });
 
@@ -68,26 +68,26 @@ describe('commands/helpers', () => {
     });
 
     it('should print detail for valid command', () => {
-      printCommandDetail('navigate_page');
+      printCommandDetail('resolve-library-id');
       expect(consoleLogSpy).toHaveBeenCalled();
     });
 
     it('should print command name', () => {
-      printCommandDetail('navigate_page');
+      printCommandDetail('resolve-library-id');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('navigate_page');
+      expect(allCalls).toContain('resolve-library-id');
     });
 
     it('should print command description', () => {
-      printCommandDetail('click');
+      printCommandDetail('resolve-library-id');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Clicks on the provided element');
+      expect(allCalls).toContain('Resolves a package/product name');
     });
 
     it('should print command parameters', () => {
-      printCommandDetail('navigate_page');
+      printCommandDetail('resolve-library-id');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('url');
+      expect(allCalls).toContain('libraryName');
     });
 
     it('should handle unknown command', () => {
@@ -121,7 +121,7 @@ describe('commands/helpers', () => {
     });
 
     it('should handle all valid commands', () => {
-      const commands = ['click', 'navigate_page', 'take_screenshot', 'list_pages', 'new_page'];
+      const commands = ['resolve-library-id', 'get-library-docs'];
 
       commands.forEach(cmd => {
         consoleLogSpy.mockClear();
@@ -134,10 +134,10 @@ describe('commands/helpers', () => {
 
     it('should trim command name before processing', () => {
       consoleLogSpy.mockClear();
-      printCommandDetail('  click  ');
+      printCommandDetail('  resolve-library-id  ');
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('click');
-      expect(allCalls).toContain('Clicks on the provided element');
+      expect(allCalls).toContain('resolve-library-id');
+      expect(allCalls).toContain('Resolves a package/product name');
     });
   });
 });

@@ -5,24 +5,10 @@ import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
 import { DEFAULT_MCP_SERVER } from '../config/index.js';
 
 /**
- * Commands that require take_snapshot to be called before execution
- */
-const COMMANDS_REQUIRING_SNAPSHOT = [
-  'click',
-  'drag',
-  'fill',
-  'fill_form',
-  'handle_dialog',
-  'hover',
-  'press_key',
-  'upload_file',
-];
-
-/**
  * Runs a command in headless mode (non-interactive)
  * @param command - The command/tool name to execute
  * @param arg - JSON string or null for the command arguments
- * @param flag - Optional flag (e.g., "--headless")
+ * @param flag - Optional flag (currently unused but kept for API compatibility)
  */
 export const runCommand = async (command: string, arg: string | null, flag: string | null): Promise<void> => {
   try {
@@ -31,7 +17,7 @@ export const runCommand = async (command: string, arg: string | null, flag: stri
     // Prepare client and transport
     const client = new Client(
       {
-        name: 'chrome-devtools-cli-headless',
+        name: 'context7-cli-headless',
         version: '1',
       },
       {
@@ -41,23 +27,10 @@ export const runCommand = async (command: string, arg: string | null, flag: stri
 
     const transport = new StdioClientTransport({
       command: DEFAULT_MCP_SERVER.command,
-      args:
-        flag === '--headless' ? [...DEFAULT_MCP_SERVER.args, '--headless=true'] : [...DEFAULT_MCP_SERVER.args],
+      args: [...DEFAULT_MCP_SERVER.args],
     });
 
     await client.connect(transport);
-
-    // Call take_snapshot first for commands that require it
-    if (COMMANDS_REQUIRING_SNAPSHOT.includes(command)) {
-      console.log('Taking snapshot before executing command...');
-      await client.callTool(
-        {
-          name: 'take_snapshot',
-          arguments: {},
-        },
-        CallToolResultSchema
-      );
-    }
 
     const argObj: { [key: string]: unknown } = arg && arg.trim() !== '' ? JSON.parse(arg) : {};
 

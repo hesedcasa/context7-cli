@@ -9,10 +9,7 @@ describe('config/constants', () => {
     });
 
     it('should have correct args array', () => {
-      expect(DEFAULT_MCP_SERVER.args).toEqual([
-        '-y',
-        '@upstash/context7-mcp',
-      ]);
+      expect(DEFAULT_MCP_SERVER.args).toEqual(['-y', '@upstash/context7-mcp']);
     });
 
     it('should have args as an array', () => {
@@ -25,55 +22,20 @@ describe('config/constants', () => {
       expect(Array.isArray(COMMANDS)).toBe(true);
     });
 
-    it('should contain 26 commands', () => {
-      expect(COMMANDS).toHaveLength(26);
+    it('should contain 2 commands', () => {
+      expect(COMMANDS).toHaveLength(2);
     });
 
-    it('should include navigate_page command', () => {
-      expect(COMMANDS).toContain('navigate_page');
+    it('should include resolve-library-id command', () => {
+      expect(COMMANDS).toContain('resolve-library-id');
     });
 
-    it('should include take_screenshot command', () => {
-      expect(COMMANDS).toContain('take_screenshot');
-    });
-
-    it('should include list_pages command', () => {
-      expect(COMMANDS).toContain('list_pages');
-    });
-
-    it('should include click command', () => {
-      expect(COMMANDS).toContain('click');
+    it('should include get-library-docs command', () => {
+      expect(COMMANDS).toContain('get-library-docs');
     });
 
     it('should include all expected commands', () => {
-      const expectedCommands = [
-        'click',
-        'close_page',
-        'drag',
-        'emulate',
-        'evaluate_script',
-        'fill',
-        'fill_form',
-        'get_console_message',
-        'get_network_request',
-        'handle_dialog',
-        'hover',
-        'list_console_messages',
-        'list_network_requests',
-        'list_pages',
-        'navigate_page',
-        'new_page',
-        'performance_analyze_insight',
-        'performance_start_trace',
-        'performance_stop_trace',
-        'press_key',
-        'resize_page',
-        'select_page',
-        'take_screenshot',
-        'take_snapshot',
-        'upload_file',
-        'wait_for',
-      ];
+      const expectedCommands = ['resolve-library-id', 'get-library-docs'];
 
       expect(COMMANDS).toEqual(expectedCommands);
     });
@@ -83,9 +45,9 @@ describe('config/constants', () => {
       expect(uniqueCommands).toHaveLength(COMMANDS.length);
     });
 
-    it('should have all lowercase snake_case commands', () => {
+    it('should have all lowercase kebab-case commands', () => {
       COMMANDS.forEach(cmd => {
-        expect(cmd).toMatch(/^[a-z_]+$/);
+        expect(cmd).toMatch(/^[a-z\-]+$/);
       });
     });
   });
@@ -99,8 +61,8 @@ describe('config/constants', () => {
       expect(COMMANDS_INFO).toHaveLength(COMMANDS.length);
     });
 
-    it('should have 26 descriptions', () => {
-      expect(COMMANDS_INFO).toHaveLength(26);
+    it('should have 2 descriptions', () => {
+      expect(COMMANDS_INFO).toHaveLength(2);
     });
 
     it('should have non-empty strings for all descriptions', () => {
@@ -110,14 +72,14 @@ describe('config/constants', () => {
       });
     });
 
-    it('should have description for navigate_page at correct index', () => {
-      const navIndex = COMMANDS.indexOf('navigate_page');
-      expect(COMMANDS_INFO[navIndex]).toContain('Navigates');
+    it('should have description for resolve-library-id at correct index', () => {
+      const resolveIndex = COMMANDS.indexOf('resolve-library-id');
+      expect(COMMANDS_INFO[resolveIndex]).toContain('Resolves');
     });
 
-    it('should have description for click at correct index', () => {
-      const clickIndex = COMMANDS.indexOf('click');
-      expect(COMMANDS_INFO[clickIndex]).toContain('Clicks');
+    it('should have description for get-library-docs at correct index', () => {
+      const docsIndex = COMMANDS.indexOf('get-library-docs');
+      expect(COMMANDS_INFO[docsIndex]).toContain('Fetches');
     });
   });
 
@@ -130,8 +92,8 @@ describe('config/constants', () => {
       expect(COMMANDS_DETAIL).toHaveLength(COMMANDS.length);
     });
 
-    it('should have 26 detail entries', () => {
-      expect(COMMANDS_DETAIL).toHaveLength(26);
+    it('should have 2 detail entries', () => {
+      expect(COMMANDS_DETAIL).toHaveLength(2);
     });
 
     it('should have strings for all details', () => {
@@ -140,16 +102,23 @@ describe('config/constants', () => {
       });
     });
 
-    it('should have detail for navigate_page containing parameters', () => {
-      const navIndex = COMMANDS.indexOf('navigate_page');
-      const detail = COMMANDS_DETAIL[navIndex];
-      expect(detail).toContain('url');
+    it('should have detail for resolve-library-id containing parameters', () => {
+      const resolveIndex = COMMANDS.indexOf('resolve-library-id');
+      const detail = COMMANDS_DETAIL[resolveIndex];
+      expect(detail).toContain('libraryName');
     });
 
-    it('should have detail for click containing uid parameter', () => {
-      const clickIndex = COMMANDS.indexOf('click');
-      const detail = COMMANDS_DETAIL[clickIndex];
-      expect(detail).toContain('uid');
+    it('should have detail for get-library-docs containing parameters', () => {
+      const docsIndex = COMMANDS.indexOf('get-library-docs');
+      const detail = COMMANDS_DETAIL[docsIndex];
+      expect(detail).toContain('context7CompatibleLibraryID');
+    });
+
+    it('should have detail for get-library-docs mentioning optional parameters', () => {
+      const docsIndex = COMMANDS.indexOf('get-library-docs');
+      const detail = COMMANDS_DETAIL[docsIndex];
+      expect(detail).toContain('topic');
+      expect(detail).toContain('page');
     });
   });
 
