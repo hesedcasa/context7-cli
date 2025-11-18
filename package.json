@@ -1,6 +1,6 @@
 {
   "name": "context7-cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "CLI tool to connect and interact with Context7 MCP server for up-to-date code documentation",
   "main": "dist/index.js",
   "bin": {
