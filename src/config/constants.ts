@@ -1,41 +1,25 @@
 /**
- * Default Context7 MCP server configuration
+ * Default Figma Desktop MCP server configuration
+ * The server runs locally at http://127.0.0.1:3845/mcp when enabled in Figma Desktop app
  */
 export const DEFAULT_MCP_SERVER = {
-  command: 'npx',
-  args: ['-y', '@upstash/context7-mcp'],
+  url: 'http://127.0.0.1:3845/mcp',
 };
 
 /**
- * Available Context7 commands
+ * Available Figma MCP commands
+ * These will be dynamically discovered from the server on connection
  */
-export const COMMANDS: string[] = ['resolve-library-id', 'get-library-docs'];
+export const COMMANDS: string[] = [];
 
 /**
  * Brief descriptions for each command
+ * These will be populated after server connection
  */
-export const COMMANDS_INFO: string[] = [
-  'Resolves a package/product name to a Context7-compatible library ID and returns a list of matching libraries',
-  'Fetches up-to-date documentation for a specific library, with optional topic focus and token limit',
-];
+export const COMMANDS_INFO: string[] = [];
 
 /**
  * Detailed parameter information for each command
+ * These will be populated after server connection
  */
-export const COMMANDS_DETAIL: string[] = [
-  `
-- libraryName (required): string - The name of the library to search for (e.g., "mongodb", "next.js", "react")
-
-Example:
-resolve-library-id {"libraryName": "mongodb"}
-`,
-  `
-- context7CompatibleLibraryID (required): string - Exact Context7-compatible library ID (e.g., "/mongodb/docs", "/vercel/next.js")
-- topic (optional): string - Focus the docs on a specific topic (e.g., "routing", "hooks")
-- page (optional): number - Page number for pagination (1-10). If the context is not sufficient, try page=2, page=3, etc. with the same topic.
-
-Examples:
-get-library-docs {"context7CompatibleLibraryID": "/mongodb/docs"}
-get-library-docs {"context7CompatibleLibraryID": "/vercel/next.js", "topic": "routing", "page": 5}
-`,
-];
+export const COMMANDS_DETAIL: string[] = [];

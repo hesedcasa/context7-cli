@@ -1,13 +1,13 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
 import readline from 'readline';
 
 import { getCurrentVersion, printAvailableCommands, printCommandDetail } from '../commands/index.js';
-import { DEFAULT_MCP_SERVER } from '../config/index.js';
+import { COMMANDS, COMMANDS_DETAIL, COMMANDS_INFO, DEFAULT_MCP_SERVER } from '../config/index.js';
 
 /**
- * Main CLI class for Context7 interaction
+ * Main CLI class for Figma Desktop MCP interaction
  */
 export class wrapper {
   private client: Client | null = null;
@@ -17,39 +17,92 @@ export class wrapper {
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
-      prompt: 'context7> ',
+      prompt: 'figma> ',
     });
   }
 
   /**
-   * Connects to the Context7 MCP server
+   * Connects to the Figma Desktop MCP server via HTTP/SSE
    */
   async connect(): Promise<void> {
     try {
-      const command = DEFAULT_MCP_SERVER.command;
-      const args = DEFAULT_MCP_SERVER.args;
+      const serverUrl = new URL(DEFAULT_MCP_SERVER.url);
 
       this.client = new Client(
         {
-          name: 'context7-cli',
-          version: '1',
+          name: 'figma-mcp-cli',
+          version: '0.1.0',
         },
         {
           capabilities: {},
         }
       );
 
-      const transport = new StdioClientTransport({
-        command,
-        args,
-      });
-
+      // Connect using SSE transport
+      const transport = new SSEClientTransport(serverUrl);
       await this.client.connect(transport);
+
+      // Discover available tools from the server
+      await this.discoverTools();
 
       this.printHelp();
     } catch (error) {
-      console.error('Failed to connect to MCP server:', error);
+      console.error('Failed to connect to Figma Desktop MCP server:', error);
+      console.error('\nMake sure:');
+      console.error('1. Figma Desktop app is running');
+      console.error('2. You have enabled "Desktop MCP server" in Dev Mode');
+      console.error('3. The server is running at http://127.0.0.1:3845/mcp');
       process.exit(1);
+    }
+  }
+
+  /**
+   * Discovers available tools from the Figma MCP server
+   */
+  private async discoverTools(): Promise<void> {
+    if (!this.client) return;
+
+    try {
+      const tools = await this.client.listTools();
+
+      // Clear existing arrays
+      COMMANDS.length = 0;
+      COMMANDS_INFO.length = 0;
+      COMMANDS_DETAIL.length = 0;
+
+      // Populate with discovered tools
+      for (const tool of tools.tools) {
+        COMMANDS.push(tool.name);
+        COMMANDS_INFO.push(tool.description || 'No description available');
+
+        // Format input schema for detailed help
+        let detail = `\nParameters:\n`;
+        if (tool.inputSchema && typeof tool.inputSchema === 'object' && 'properties' in tool.inputSchema) {
+          const schema = tool.inputSchema as {
+            properties?: Record<string, { type?: string; description?: string }>;
+            required?: string[];
+          };
+          const properties = schema.properties || {};
+          const required = schema.required || [];
+
+          for (const [key, value] of Object.entries(properties)) {
+            const isRequired = required.includes(key);
+            const type = value.type || 'any';
+            const desc = value.description || '';
+            detail += `- ${key} ${isRequired ? '(required)' : '(optional)'}: ${type} - ${desc}\n`;
+          }
+        } else {
+          detail += 'No parameters required\n';
+        }
+
+        detail += `\nExample:\n${tool.name} ${tool.inputSchema && 'properties' in tool.inputSchema ? JSON.stringify(Object.keys((tool.inputSchema as { properties?: Record<string, unknown> }).properties || {}).reduce((acc, key) => ({ ...acc, [key]: `<${key}>` }), {})) : '{}'}\n`;
+
+        COMMANDS_DETAIL.push(detail);
+      }
+
+      console.log(`\nDiscovered ${tools.tools.length} tools from Figma MCP server`);
+    } catch (error) {
+      console.warn('Warning: Could not discover tools from server:', error);
     }
   }
 
@@ -142,9 +195,10 @@ export class wrapper {
    */
   private printHelp(): void {
     const version = getCurrentVersion();
+    const commandList = COMMANDS.length > 0 ? COMMANDS.join(', ') : 'No commands available (not connected)';
 
     console.log(`
-Context7 CLI v${version}
+Figma Desktop MCP CLI v${version}
 
 Usage:
 
@@ -156,12 +210,10 @@ exit, quit, q    exit the CLI
 
 All commands:
 
-resolve-library-id, get-library-docs
+${commandList}
 
-Examples:
-  >resolve-library-id {"libraryName":"mongodb"}
-  >get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs"}
-  >get-library-docs {"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}
+Note: Make sure Figma Desktop app is running with MCP server enabled in Dev Mode.
+Select a frame/layer in Figma before using commands that require selections.
 
 `);
   }

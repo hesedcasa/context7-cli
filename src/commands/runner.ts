@@ -1,5 +1,5 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
 
 import { DEFAULT_MCP_SERVER } from '../config/index.js';
@@ -17,18 +17,16 @@ export const runCommand = async (command: string, arg: string | null, flag: stri
     // Prepare client and transport
     const client = new Client(
       {
-        name: 'context7-cli-headless',
-        version: '1',
+        name: 'figma-mcp-cli-headless',
+        version: '0.1.0',
       },
       {
         capabilities: {},
       }
     );
 
-    const transport = new StdioClientTransport({
-      command: DEFAULT_MCP_SERVER.command,
-      args: [...DEFAULT_MCP_SERVER.args],
-    });
+    const serverUrl = new URL(DEFAULT_MCP_SERVER.url);
+    const transport = new SSEClientTransport(serverUrl);
 
     await client.connect(transport);
 
@@ -50,6 +48,10 @@ export const runCommand = async (command: string, arg: string | null, flag: stri
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error('Error running command:', errorMessage);
+    console.error('\nMake sure:');
+    console.error('1. Figma Desktop app is running');
+    console.error('2. You have enabled "Desktop MCP server" in Dev Mode');
+    console.error('3. The server is running at http://127.0.0.1:3845/mcp');
     process.exit(1);
   }
 };

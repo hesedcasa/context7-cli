@@ -29,11 +29,21 @@ npm run find-deadcode       # Find unused exports with ts-prune
 npm run pre-commit          # Run format + find-deadcode
 ```
 
-**Note**: The CLI connects to the Context7 MCP server (`@upstash/context7-mcp`) to fetch up-to-date library documentation.
+**Note**: The CLI connects to the Figma Desktop MCP server running locally at `http://127.0.0.1:3845/mcp` to interact with Figma designs and generate code.
+
+## Prerequisites
+
+Before using this CLI:
+
+1. **Figma Desktop App** must be running
+2. Open a Design file in Figma
+3. Toggle to **Dev Mode** (Shift+D)
+4. Enable **"Desktop MCP server"** in the inspect panel
+5. Server will run at `http://127.0.0.1:3845/mcp`
 
 ## Project Architecture
 
-This is a **modular TypeScript CLI** that provides a REPL interface for querying library documentation through the Model Context Protocol (MCP) via Context7.
+This is a **modular TypeScript CLI** that provides a REPL interface for interacting with Figma designs through the Model Context Protocol (MCP) via Figma Desktop MCP server.
 
 ### Project Structure
 
@@ -42,14 +52,14 @@ src/
 ├── index.ts (28 lines)                    # Main entry point
 ├── cli/
 │   ├── index.ts                           # Barrel export
-│   └── wrapper.ts (207 lines)             # CLI class with REPL logic
+│   └── wrapper.ts (~220 lines)            # CLI class with REPL logic
 ├── commands/
 │   ├── index.ts                           # Barrel export
 │   ├── helpers.ts (45 lines)              # Command info helpers
-│   └── runner.ts (55 lines)               # Headless command execution
+│   └── runner.ts (~60 lines)              # Headless command execution
 ├── config/
 │   ├── index.ts                           # Barrel export
-│   └── constants.ts (44 lines)            # Command definitions & server config
+│   └── constants.ts (~25 lines)           # Server config (commands discovered dynamically)
 └── utils/
     ├── index.ts                           # Barrel export
     └── argParser.ts (74 lines)            # Command-line argument parser
@@ -76,27 +86,28 @@ tests/
 #### CLI Module (`src/cli/`)
 
 - **wrapper class**: Main orchestrator managing:
-  - `connect()` - Establishes MCP server connection using `@modelcontextprotocol/sdk` client and stdio transport
+  - `connect()` - Establishes MCP server connection using `@modelcontextprotocol/sdk` client and **SSE transport** (HTTP-based)
+  - `discoverTools()` - **Dynamically discovers** available tools from Figma MCP server on connection
   - `start()` - Initiates interactive REPL with readline interface
   - `handleCommand()` - Parses and processes user commands
-  - `callTool()` - Executes MCP tools with JSON argument parsing
+  - `runCommand()` - Executes MCP tools with JSON argument parsing
   - `disconnect()` - Graceful cleanup on exit signals (SIGINT/SIGTERM)
 
 #### Commands Module (`src/commands/`)
 
 - `helpers.ts` - Display command information and help
-  - `printAvailableCommands()` - Lists all 2 available commands
+  - `printAvailableCommands()` - Lists all dynamically discovered commands
   - `printCommandDetail(command)` - Shows detailed help for specific command
 - `runner.ts` - Execute commands in headless mode
-  - `runCommand(command, arg, flag)` - Non-interactive command execution
+  - `runCommand(command, arg, flag)` - Non-interactive command execution via HTTP/SSE
 
 #### Config Module (`src/config/`)
 
 - `constants.ts` - Centralized configuration
-  - `DEFAULT_MCP_SERVER` - MCP server connection settings
-  - `COMMANDS[]` - Array of 2 available command names
-  - `COMMANDS_INFO[]` - Brief descriptions for each command
-  - `COMMANDS_DETAIL[]` - Detailed parameter documentation
+  - `DEFAULT_MCP_SERVER` - MCP server connection settings (HTTP URL: `http://127.0.0.1:3845/mcp`)
+  - `COMMANDS[]` - Array of dynamically discovered command names **(populated on connection)**
+  - `COMMANDS_INFO[]` - Brief descriptions for each command **(populated on connection)**
+  - `COMMANDS_DETAIL[]` - Detailed parameter documentation **(populated on connection)**
 
 #### Utils Module (`src/utils/`)
 
@@ -106,14 +117,18 @@ tests/
 ### MCP Client Integration
 
 - Uses `@modelcontextprotocol/sdk` for protocol communication
-- Connects to `@upstash/context7-mcp` server via stdio
-- Discovers and lists 2 available documentation tools
+- Connects to Figma Desktop MCP server via **SSE (Server-Sent Events)** transport
+- Server runs locally at `http://127.0.0.1:3845/mcp`
+- **Dynamically discovers** available tools from server on connection
+- **Selection-based**: operates on currently selected frames/layers in Figma Desktop
+- Real-time interaction with Figma designs
 
 ### REPL Interface
 
-- Custom prompt: `context7>`
+- Custom prompt: `figma>`
 - Special commands: `help`, `commands`, `clear`, `exit/quit/q`
 - Tool invocation: Direct tool name with JSON arguments
+- Real-time interaction with Figma Desktop selections
 
 ### TypeScript Configuration
 
@@ -137,37 +152,44 @@ npm run dev
 
 # After building, use the compiled binary
 npm link  # Link globally
-context7-cli  # Use the CLI command
+figma-mcp-cli  # Use the CLI command
 ```
 
 ### Available Tools
 
-The CLI exposes **2 documentation tools** from the Context7 MCP server:
+The CLI **dynamically discovers** tools from the Figma Desktop MCP server. Common tools include:
 
-- **resolve-library-id**: Resolves a package/product name to a Context7-compatible library ID
-- **get-library-docs**: Fetches up-to-date documentation for a specific library
+- **Generate code from frames**: Convert selected Figma designs into code
+- **Extract design context**: Pull variables, components, and layout data
+- **Retrieve resources**: Gather code resources from Figma files
+
+**Note**: Exact tools depend on the Figma MCP server version and configuration. Use the `commands` command to see all available tools.
 
 ### Command Examples
 
 ```bash
+# Prerequisites:
+# 1. Start Figma Desktop app
+# 2. Open a design file
+# 3. Toggle to Dev Mode (Shift+D)
+# 4. Enable "Desktop MCP server" in the inspect panel
+# 5. Select a frame or layer in Figma
+
 # Start the CLI in interactive mode
 npm start
 
 # Inside the REPL:
-context7> commands                          # List all 2 commands
-context7> help                              # Show help
-context7> resolve-library-id {"name":"mongodb"}  # Resolve library ID
-context7> get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs"}  # Get docs
-context7> get-library-docs {"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}  # Get topic-specific docs
-context7> exit                              # Exit
+figma> commands                    # List all available commands (dynamically discovered)
+figma> help                        # Show help
+figma> <command-name> {"param":"value"}  # Execute a discovered command
+figma> exit                        # Exit
 
 # Headless mode (one-off commands):
-npx context7-cli resolve-library-id '{"name":"mongodb"}'
-npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/mongodb/docs"}'
-npx context7-cli --commands        # List all commands
-npx context7-cli resolve-library-id -h  # Command-specific help
-npx context7-cli --help            # General help
-npx context7-cli --version         # Show version
+npx figma-mcp-cli <command-name> '{"param":"value"}'
+npx figma-mcp-cli --commands       # List all commands
+npx figma-mcp-cli <command> -h     # Command-specific help
+npx figma-mcp-cli --help           # General help
+npx figma-mcp-cli --version        # Show version
 ```
 
 ## Code Structure & Module Responsibilities
@@ -181,7 +203,8 @@ npx context7-cli --version         # Show version
 ### CLI Class (`cli/wrapper.ts`)
 
 - Interactive REPL management
-- MCP server connection lifecycle
+- MCP server connection lifecycle via HTTP/SSE
+- Dynamic tool discovery from server
 - User command processing
 - Tool execution with result formatting
 
@@ -195,12 +218,12 @@ npx context7-cli --version         # Show version
 
 - Headless/non-interactive execution
 - Single command → result → exit pattern
-- Independent MCP client instance
+- Independent MCP client instance via HTTP/SSE
 
 ### Constants (`config/constants.ts`)
 
-- Single source of truth for all configuration
-- Command definitions (names, descriptions, parameters)
+- Single source of truth for server configuration
+- Commands are discovered at runtime (not hardcoded)
 - Server connection settings
 - No logic, just data
 
@@ -214,17 +237,19 @@ npx context7-cli --version         # Show version
 
 - **Barrel Exports**: Each module directory has `index.ts` exporting public APIs
 - **ES Modules**: All imports use `.js` extensions (TypeScript requirement)
+- **HTTP Transport**: Uses **SSEClientTransport** for local HTTP connection to Figma server
+- **Dynamic Discovery**: Commands are discovered at runtime via `client.listTools()`
 - **Argument Parsing**: Supports JSON arguments for tool parameters
 - **Tool Arguments**: Accepts JSON objects (e.g., `{"key": "value"}`)
-- **Connection Management**: Uses `@modelcontextprotocol/sdk` with StdioClientTransport
 - **Signal Handling**: Graceful shutdown on Ctrl+C (SIGINT) and SIGTERM
 - **Error Handling**: Try-catch blocks for connection and tool execution with user-friendly messages
+- **Selection-Based**: Many operations work on currently selected Figma elements
 
 ## Dependencies
 
 **Runtime**:
 
-- `@modelcontextprotocol/sdk@^1.0.0` - Official MCP client SDK
+- `@modelcontextprotocol/sdk@^1.0.0` - Official MCP client SDK (using SSE transport for HTTP connections)
 
 **Development**:
 
@@ -287,9 +312,12 @@ Each test file follows standard Vitest patterns:
 
 1. **Modular Structure**: Code is organized into focused modules for better maintainability
 2. **ES2022 Modules**: Project uses `"type": "module"` - no CommonJS
-3. **MCP Ecosystem**: This CLI is a client that connects to the `@upstash/context7-mcp` server package
-4. **Barrel Exports**: Use `from './module/index.js'` for cleaner imports
-5. **No Breaking Changes**: Refactoring maintains 100% backward compatibility
+3. **MCP Ecosystem**: This CLI is a client that connects to the Figma Desktop MCP server via HTTP/SSE
+4. **HTTP Transport**: Uses SSE (Server-Sent Events) transport instead of stdio for local HTTP connection
+5. **Dynamic Discovery**: Commands are discovered at runtime from the Figma MCP server
+6. **Selection-Based**: Many commands operate on the currently selected frame/layer in Figma Desktop
+7. **Barrel Exports**: Use `from './module/index.js'` for cleaner imports
+8. **Real-time**: Changes in Figma are immediately available to the CLI
 
 ## Commit Message Convention
 
@@ -305,24 +333,29 @@ Each test file follows standard Vitest patterns:
 **Examples:**
 
 ```
-feat: add pagination support for get-library-docs command
-fix: resolve JSON parsing error in headless mode
-docs: update README with new command examples
-refactor: extract MCP client connection logic into separate function
-test: add unit tests for argParser edge cases
-chore: update dependencies to latest versions
+feat: add support for Figma Desktop MCP server
+feat: implement dynamic tool discovery from server
+fix: resolve connection error handling for HTTP transport
+docs: update README with Figma setup instructions
+refactor: extract HTTP client connection logic
+test: add unit tests for SSE transport connection
+chore: update dependencies to latest MCP SDK version
 ```
 
 When creating pull requests, the PR title must follow this format. The PR description should provide additional context about what changed and why.
 
 ## Development Tips
 
-### Adding a New Command
+### About Commands
 
-1. Add command name to `COMMANDS` array in `config/constants.ts`
-2. Add description to `COMMANDS_INFO` array (same index)
-3. Add parameter details to `COMMANDS_DETAIL` array (same index)
-4. Done! The CLI will automatically discover it
+Commands are **dynamically discovered** from the Figma MCP server on connection. The CLI automatically:
+
+1. Connects to the server at `http://127.0.0.1:3845/mcp`
+2. Calls `listTools()` to discover available tools
+3. Populates `COMMANDS`, `COMMANDS_INFO`, and `COMMANDS_DETAIL` arrays
+4. Makes them available for execution
+
+No manual command configuration is needed!
 
 ### Adding a New CLI Flag
 
@@ -362,7 +395,6 @@ npm start
 # Test specific functionality (after building)
 node dist/index.js --help
 node dist/index.js --commands
-node dist/index.js resolve-library-id -h
 ```
 
 ### Common Patterns
@@ -386,6 +418,25 @@ try {
 }
 ```
 
+**SSE Connection:**
+
+```typescript
+const serverUrl = new URL('http://127.0.0.1:3845/mcp');
+const transport = new SSEClientTransport(serverUrl);
+await this.client.connect(transport);
+```
+
+**Tool Discovery:**
+
+```typescript
+const tools = await this.client.listTools();
+for (const tool of tools.tools) {
+  COMMANDS.push(tool.name);
+  COMMANDS_INFO.push(tool.description || 'No description available');
+  // ... process tool.inputSchema for detailed parameters
+}
+```
+
 **MCP tool call:**
 
 ```typescript
@@ -401,9 +452,9 @@ const result = await this.client.callTool(
 ## Performance Considerations
 
 - The modular structure has **no performance impact** (tree-shaking applies)
-- Same runtime behavior as before
-- Same bundle size
-- Same startup time
+- Same runtime behavior as the original architecture
+- Dynamic tool discovery adds minimal overhead (only on connection)
+- HTTP/SSE connection is efficient for local server communication
 
 ## Code Quality Tools
 

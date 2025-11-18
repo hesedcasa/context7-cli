@@ -1,10 +1,10 @@
 {
-  "name": "context7-cli",
-  "version": "1.0.0",
-  "description": "CLI tool to connect and interact with Context7 MCP server for up-to-date code documentation",
+  "name": "figma-mcp-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to connect and interact with Figma Desktop MCP server for design-to-code workflows",
   "main": "dist/index.js",
   "bin": {
-    "context7-cli": "dist/index.js"
+    "figma-mcp-cli": "dist/index.js"
   },
   "type": "module",
   "scripts": {
@@ -20,11 +20,12 @@
     "pre-commit": "npm run format && npm run find-deadcode"
   },
   "keywords": [
-    "context7",
+    "figma",
     "mcp",
-    "documentation",
+    "design",
+    "design-to-code",
     "cli",
-    "upstash"
+    "model-context-protocol"
   ],
   "author": "Hesed",
   "license": "Apache-2.0",
@@ -49,11 +50,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hesedcasa/context7-cli.git"
+    "url": "git+https://github.com/hesedcasa/figma-mcp-cli.git"
   },
   "types": "./dist/index.d.ts",
   "bugs": {
-    "url": "https://github.com/hesedcasa/context7-cli/issues"
+    "url": "https://github.com/hesedcasa/figma-mcp-cli/issues"
   },
-  "homepage": "https://github.com/hesedcasa/context7-cli#readme"
+  "homepage": "https://github.com/hesedcasa/figma-mcp-cli#readme"
 }

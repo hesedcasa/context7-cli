@@ -1,43 +1,59 @@
-# Context7 CLI
+# Figma Desktop MCP CLI
 
-[![npm context7-cli package](https://img.shields.io/npm/v/context7-cli.svg)](https://npmjs.org/package/context7-cli)
-
-A command-line interface for connecting to and interacting with Context7 MCP server. Get up-to-date, version-specific code documentation and examples directly from your terminal.
+A command-line interface for connecting to and interacting with Figma Desktop MCP server. Turn your Figma designs into code and extract design context directly from your terminal.
 
 ## Features
 
-- 📡 Persistent connection to Context7 MCP server
-- 💻 Interactive REPL for documentation queries
+- 🎨 Persistent connection to Figma Desktop MCP server
+- 💻 Interactive REPL for design queries
 - 🚀 Headless mode for one-off command execution
-- 📚 Resolve library IDs and fetch current documentation
+- 🔄 Generate code from selected Figma frames
+- 📐 Extract design context (variables, components, layout data)
 - 🔧 Command-specific help and documentation
-- 🎯 Topic-focused documentation retrieval
+- 🎯 Selection-based design operations
 
 ## Requirements
 
 - [Node.js](https://nodejs.org/) v22.0 or newer
 - [npm](https://www.npmjs.com/)
+- **Figma Desktop App** with Dev Mode access (paid plan required)
+- MCP server enabled in Figma Desktop app
+
+## Prerequisites
+
+Before using this CLI, you must:
+
+1. **Install Figma Desktop App**: Download and install the latest version of [Figma Desktop](https://www.figma.com/downloads/)
+
+2. **Enable Desktop MCP Server**:
+   - Open Figma Desktop app
+   - Create or open a Design file
+   - Toggle to Dev Mode (Shift+D)
+   - In the MCP server section of the inspect panel, click **Enable desktop MCP server**
+   - The server will run locally at `http://127.0.0.1:3845/mcp`
+
+3. **Select Design Elements**: The MCP server is selection-based, so make sure to select a frame or layer in Figma before running commands that require selections.
 
 ## Installation
 
 ```bash
-npm install -g context7-cli
+npm install -g figma-mcp-cli
 ```
 
 ## Quick Start
 
 ### Interactive Mode
 
-Start the CLI and interact with Context7 through a REPL:
+Start the CLI and interact with Figma through a REPL:
 
 ```bash
-npx context7-cli
+npx figma-mcp-cli
 ```
 
-Once started, you'll see the `context7>` prompt:
+Once started, you'll see the `figma>` prompt:
 
 ```
-Context7 CLI
+Figma Desktop MCP CLI v0.1.0
 
 Usage:
 
@@ -47,16 +63,16 @@ commands         list all the available commands
 clear            clear the screen
 exit, quit, q    exit the CLI
 
-context7> commands
-# Lists all 2 available commands
+Note: Make sure Figma Desktop app is running with MCP server enabled in Dev Mode.
+Select a frame/layer in Figma before using commands that require selections.
 
-context7> resolve-library-id {"libraryName":"mongodb"}
-# Resolves "mongodb" to a Context7-compatible library ID
+figma> commands
+# Lists all available commands (dynamically discovered from server)
 
-context7> get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs","topic":"aggregation"}
-# Gets MongoDB documentation focused on aggregation
+figma> <command> {"param":"value"}
+# Execute a command with parameters
 
-context7> exit
+figma> exit
 ```
 
 ### Headless Mode
@@ -65,99 +81,104 @@ Execute single commands without starting the interactive REPL:
 
 ```bash
 # General format
-npx context7-cli <command> '<json_arguments>'
+npx figma-mcp-cli <command> '<json_arguments>'
 
-# Examples
-npx context7-cli resolve-library-id '{"libraryName":"mongodb"}'
-npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/mongodb/docs"}'
-npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing","page":2}'
+# Examples (commands will be discovered from your Figma MCP server)
+npx figma-mcp-cli <command-name> '{}'
 ```
 
 ### Command Line Options
 
 ```bash
 # Show version
-npx context7-cli --version
-npx context7-cli -v
+npx figma-mcp-cli --version
+npx figma-mcp-cli -v
 
 # List all commands
-npx context7-cli --commands
+npx figma-mcp-cli --commands
 
 # Get help for specific command
-npx context7-cli resolve-library-id -h
-npx context7-cli get-library-docs -h
+npx figma-mcp-cli <command-name> -h
 
 # General help
-npx context7-cli --help
-npx context7-cli -h
+npx figma-mcp-cli --help
+npx figma-mcp-cli -h
 ```
+
+## How It Works
+
+1. **Server Connection**: The CLI connects to Figma Desktop MCP server running at `http://127.0.0.1:3845/mcp`
+2. **Tool Discovery**: Available tools are automatically discovered from the server on connection
+3. **Selection-Based**: Commands work on elements you have selected in Figma Desktop app
+4. **Real-time Updates**: Changes in Figma are immediately available to the CLI
 
 ## Available Tools
 
-The CLI exposes **2 documentation tools** from the Context7 MCP server:
+The CLI dynamically discovers available tools from the Figma MCP server. Common tools include:
 
-### resolve-library-id
+- **Generate code from selected frames**: Select a Figma frame and turn it into code
+- **Extract design context**: Pull in variables, components, and layout data
+- **Retrieve resources**: Gather code resources from files and provide them as context
 
-Resolves a package/product name to a Context7-compatible library ID and returns a list of matching libraries.
-
-**Parameters:**
-
-- `libraryName` (required): string - The package/product name to resolve (e.g., "mongodb", "next.js", "react")
-
-**Example:**
-
-```bash
-context7> resolve-library-id {"libraryName":"mongodb"}
-```
-
-### get-library-docs
-
-Fetches up-to-date documentation for a specific library, with optional topic focus and pagination.
-
-**Parameters:**
-
-- `context7CompatibleLibraryID` (required): string - Exact Context7-compatible library ID (e.g., "/mongodb/docs", "/vercel/next.js")
-- `topic` (optional): string - Focus topic for the docs (e.g., "routing", "hooks", "authentication")
-- `page` (optional): number - Page number for pagination (1-10). If the context is not sufficient, try page=2, page=3, etc. with the same topic.
-
-**Examples:**
-
-```bash
-context7> get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs"}
-context7> get-library-docs {"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}
-context7> get-library-docs {"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing","page":2}
-```
+The exact tools available depend on your Figma MCP server configuration. Use the `commands` command to see all available tools.
 
 ## Use Cases
 
-### Get Started with a New Library
+### Generate React Component from Design
 
 ```bash
-# 1. Resolve the library ID
-context7> resolve-library-id {"libraryName":"mongodb"}
-
-# 2. Get general documentation
-context7> get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs"}
-
-# 3. Get topic-specific documentation
-context7> get-library-docs {"context7CompatibleLibraryID":"/mongodb/docs","topic":"aggregation"}
+# 1. In Figma Desktop: Select a frame/component
+# 2. In CLI: Generate code
+figma> <generate-code-command> {"framework":"react"}
 ```
 
-### Quick Documentation Lookup
+### Extract Design Tokens
 
 ```bash
-# Get Next.js routing documentation
-npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/vercel/next.js","topic":"routing"}'
-
-# Get React hooks documentation
-npx context7-cli get-library-docs '{"context7CompatibleLibraryID":"/facebook/react","topic":"hooks"}'
+# Get design variables and tokens from current file
+figma> <extract-context-command> {}
 ```
 
-## About Context7
+### Quick Code Generation
 
-Context7 is an MCP server that delivers up-to-date, version-specific code documentation and examples directly into LLM prompts and AI code editors. It solves the problem of outdated training data by pulling current documentation straight from the source.
+```bash
+# Generate code from selected frame (headless mode)
+npx figma-mcp-cli <generate-code-command> '{"framework":"react"}'
+```
 
-Learn more at [context7.com](https://context7.com) or [github.com/upstash/context7](https://github.com/upstash/context7).
+## Troubleshooting
+
+### Connection Failed
+
+If you see "Failed to connect to Figma Desktop MCP server", make sure:
+
+1. Figma Desktop app is running
+2. You have a Design file open
+3. You are in Dev Mode (Shift+D)
+4. Desktop MCP server is enabled in the inspect panel
+5. The server is running at `http://127.0.0.1:3845/mcp`
+
+### No Commands Available
+
+If no commands are discovered:
+
+1. Check that the MCP server is properly enabled
+2. Restart Figma Desktop app
+3. Try disabling and re-enabling the Desktop MCP server
+
+### Selection-Based Commands Not Working
+
+Some commands require an active selection in Figma:
+
+1. Select a frame or layer in Figma Desktop
+2. Run the command in the CLI
+3. The command will operate on your current selection
+
+## About Figma MCP Server
+
+The Figma MCP (Model Context Protocol) server brings Figma directly into your AI-powered coding workflow by providing design information and context to AI agents. It enables seamless design-to-code workflows by allowing AI assistants to access your Figma designs, extract components, and generate code.
+
+Learn more at [Figma Developer Docs](https://developers.figma.com/docs/figma-mcp-server/).
 
 ## License
 
