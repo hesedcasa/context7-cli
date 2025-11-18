@@ -102,7 +102,7 @@ describe('cli/wrapper (Integration)', () => {
       await cli.connect();
 
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Chrome DevTools CLI');
+      expect(allCalls).toContain('Context7 CLI');
     });
 
     it('should handle connection errors and exit', async () => {
@@ -162,7 +162,7 @@ describe('cli/wrapper (Integration)', () => {
       await lineHandler('help');
 
       const allCalls = consoleLogSpy.mock.calls.map(call => call[0]).join(' ');
-      expect(allCalls).toContain('Chrome DevTools CLI');
+      expect(allCalls).toContain('Context7 CLI');
       expect(mockPrompt).toHaveBeenCalled();
     });
 

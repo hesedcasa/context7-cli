@@ -49,12 +49,12 @@ describe('commands/runner', () => {
 
   describe('runCommand', () => {
     it('should execute command without arguments', async () => {
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(mockConnect).toHaveBeenCalled();
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'list_pages',
+          name: 'resolve-library-id',
           arguments: {},
         },
         {}
@@ -64,56 +64,59 @@ describe('commands/runner', () => {
     });
 
     it('should execute command with JSON arguments', async () => {
-      const jsonArg = '{"url": "https://google.com"}';
+      const jsonArg = '{"libraryName": "mongodb"}';
 
-      await runCommand('navigate_page', jsonArg, null);
+      await runCommand('resolve-library-id', jsonArg, null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'navigate_page',
-          arguments: { url: 'https://google.com' },
+          name: 'resolve-library-id',
+          arguments: { libraryName: 'mongodb' },
         },
         {}
       );
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
-    it('should execute command with --headless flag', async () => {
-      const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
+    it('should execute get-library-docs with JSON arguments', async () => {
+      const jsonArg = '{"context7CompatibleLibraryID": "/mongodb/docs", "topic": "aggregation"}';
 
-      await runCommand('list_pages', null, '--headless');
+      await runCommand('get-library-docs', jsonArg, null);
 
-      expect(StdioClientTransport).toHaveBeenCalledWith(
-        expect.objectContaining({
-          args: expect.arrayContaining(['--headless=true']),
-        })
+      expect(mockCallTool).toHaveBeenCalledWith(
+        {
+          name: 'get-library-docs',
+          arguments: { context7CompatibleLibraryID: '/mongodb/docs', topic: 'aggregation' },
+        },
+        {}
       );
       expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
-    it('should execute command without --headless flag', async () => {
+    it('should use correct transport configuration', async () => {
       const { StdioClientTransport } = await import('@modelcontextprotocol/sdk/client/stdio.js');
 
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(StdioClientTransport).toHaveBeenCalledWith(
         expect.objectContaining({
-          args: expect.not.arrayContaining(['--headless=true']),
+          command: 'npx',
+          args: ['-y', '@upstash/context7-mcp'],
         })
       );
     });
 
     it('should log command and arguments', async () => {
-      await runCommand('navigate_page', '{"url": "https://google.com"}', null);
+      await runCommand('resolve-library-id', '{"libraryName": "mongodb"}', null);
 
-      expect(consoleLogSpy).toHaveBeenCalledWith('navigate_page {"url": "https://google.com"}');
+      expect(consoleLogSpy).toHaveBeenCalledWith('resolve-library-id {"libraryName": "mongodb"}');
     });
 
     it('should log result as JSON', async () => {
       const mockResult = { result: 'success', data: 'test' };
       mockCallTool.mockResolvedValue(mockResult);
 
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(consoleLogSpy).toHaveBeenCalledWith(JSON.stringify(mockResult, null, 2));
     });
@@ -121,7 +124,7 @@ describe('commands/runner', () => {
     it('should handle connection errors', async () => {
       mockConnect.mockRejectedValue(new Error('Connection failed'));
 
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error running command:', 'Connection failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
@@ -130,25 +133,25 @@ describe('commands/runner', () => {
     it('should handle tool execution errors', async () => {
       mockCallTool.mockRejectedValue(new Error('Tool execution failed'));
 
-      await runCommand('navigate_page', '{"url": "invalid"}', null);
+      await runCommand('resolve-library-id', '{"libraryName": "invalid"}', null);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error running command:', 'Tool execution failed');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle JSON parse errors', async () => {
-      await runCommand('navigate_page', 'invalid json', null);
+      await runCommand('resolve-library-id', 'invalid json', null);
 
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
     it('should handle empty string arguments', async () => {
-      await runCommand('list_pages', '', null);
+      await runCommand('resolve-library-id', '', null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'list_pages',
+          name: 'resolve-library-id',
           arguments: {},
         },
         {}
@@ -156,11 +159,11 @@ describe('commands/runner', () => {
     });
 
     it('should handle whitespace-only arguments', async () => {
-      await runCommand('list_pages', '   ', null);
+      await runCommand('resolve-library-id', '   ', null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'list_pages',
+          name: 'resolve-library-id',
           arguments: {},
         },
         {}
@@ -168,7 +171,7 @@ describe('commands/runner', () => {
     });
 
     it('should close client after successful execution', async () => {
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(mockClose).toHaveBeenCalled();
     });
@@ -176,11 +179,11 @@ describe('commands/runner', () => {
     it('should use correct client name and version', async () => {
       const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
 
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(Client).toHaveBeenCalledWith(
         {
-          name: 'chrome-devtools-cli-headless',
+          name: 'context7-cli-headless',
           version: '1',
         },
         {
@@ -190,15 +193,17 @@ describe('commands/runner', () => {
     });
 
     it('should handle complex JSON arguments', async () => {
-      const complexArg = '{"elements": [{"uid": "1", "value": "test"}]}';
+      const complexArg = '{"context7CompatibleLibraryID": "/vercel/next.js", "topic": "routing", "page": 2}';
 
-      await runCommand('fill_form', complexArg, null);
+      await runCommand('get-library-docs', complexArg, null);
 
       expect(mockCallTool).toHaveBeenCalledWith(
         {
-          name: 'fill_form',
+          name: 'get-library-docs',
           arguments: {
-            elements: [{ uid: '1', value: 'test' }],
+            context7CompatibleLibraryID: '/vercel/next.js',
+            topic: 'routing',
+            page: 2,
           },
         },
         {}
@@ -208,154 +213,58 @@ describe('commands/runner', () => {
     it('should handle error without message property', async () => {
       mockCallTool.mockRejectedValue('Plain error string');
 
-      await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith('Error running command:', 'Plain error string');
       expect(processExitSpy).toHaveBeenCalledWith(1);
     });
 
-    describe('snapshot-requiring commands', () => {
-      it('should call take_snapshot before click command', async () => {
-        await runCommand('click', '{"uid": "element-1"}', null);
+    it('should handle flag parameter gracefully', async () => {
+      await runCommand('resolve-library-id', '{"libraryName": "react"}', '--some-flag');
 
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(
-          1,
-          {
-            name: 'take_snapshot',
-            arguments: {},
-          },
-          {}
-        );
-        expect(mockCallTool).toHaveBeenNthCalledWith(
-          2,
-          {
-            name: 'click',
-            arguments: { uid: 'element-1' },
-          },
-          {}
-        );
-      });
-
-      it('should call take_snapshot before drag command', async () => {
-        await runCommand('drag', '{"from_uid": "1", "to_uid": "2"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(
-          2,
-          { name: 'drag', arguments: { from_uid: '1', to_uid: '2' } },
-          {}
-        );
-      });
-
-      it('should call take_snapshot before fill command', async () => {
-        await runCommand('fill', '{"uid": "input-1", "value": "test"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(
-          2,
-          { name: 'fill', arguments: { uid: 'input-1', value: 'test' } },
-          {}
-        );
-      });
-
-      it('should call take_snapshot before fill_form command', async () => {
-        await runCommand('fill_form', '{"elements": [{"uid": "1", "value": "test"}]}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(
-          2,
-          { name: 'fill_form', arguments: { elements: [{ uid: '1', value: 'test' }] } },
-          {}
-        );
-      });
-
-      it('should call take_snapshot before handle_dialog command', async () => {
-        await runCommand('handle_dialog', '{"action": "accept"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(2, { name: 'handle_dialog', arguments: { action: 'accept' } }, {});
-      });
-
-      it('should call take_snapshot before hover command', async () => {
-        await runCommand('hover', '{"uid": "element-1"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(2, { name: 'hover', arguments: { uid: 'element-1' } }, {});
-      });
-
-      it('should call take_snapshot before press_key command', async () => {
-        await runCommand('press_key', '{"key": "Enter"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(2, { name: 'press_key', arguments: { key: 'Enter' } }, {});
-      });
-
-      it('should call take_snapshot before upload_file command', async () => {
-        await runCommand('upload_file', '{"uid": "file-input", "path": "/path/to/file"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(2);
-        expect(mockCallTool).toHaveBeenNthCalledWith(1, { name: 'take_snapshot', arguments: {} }, {});
-        expect(mockCallTool).toHaveBeenNthCalledWith(
-          2,
-          { name: 'upload_file', arguments: { uid: 'file-input', path: '/path/to/file' } },
-          {}
-        );
-      });
-
-      it('should log snapshot message for commands requiring snapshot', async () => {
-        await runCommand('click', '{"uid": "element-1"}', null);
-
-        expect(consoleLogSpy).toHaveBeenCalledWith('Taking snapshot before executing command...');
-      });
+      expect(consoleLogSpy).toHaveBeenCalledWith('resolve-library-id {"libraryName": "react"} --some-flag');
+      expect(mockCallTool).toHaveBeenCalledWith(
+        {
+          name: 'resolve-library-id',
+          arguments: { libraryName: 'react' },
+        },
+        {}
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(0);
     });
 
-    describe('non-snapshot-requiring commands', () => {
-      it('should NOT call take_snapshot for list_pages command', async () => {
-        await runCommand('list_pages', null, null);
+    it('should connect client before calling tool', async () => {
+      const callOrder: string[] = [];
 
-        expect(mockCallTool).toHaveBeenCalledTimes(1);
-        expect(mockCallTool).toHaveBeenCalledWith({ name: 'list_pages', arguments: {} }, {});
+      mockConnect.mockImplementation(async () => {
+        callOrder.push('connect');
       });
 
-      it('should NOT call take_snapshot for navigate_page command', async () => {
-        await runCommand('navigate_page', '{"url": "https://google.com"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(1);
-        expect(mockCallTool).toHaveBeenCalledWith(
-          { name: 'navigate_page', arguments: { url: 'https://google.com' } },
-          {}
-        );
+      mockCallTool.mockImplementation(async () => {
+        callOrder.push('callTool');
+        return { result: 'success' };
       });
 
-      it('should NOT call take_snapshot for take_screenshot command', async () => {
-        await runCommand('take_screenshot', null, null);
+      await runCommand('resolve-library-id', null, null);
 
-        expect(mockCallTool).toHaveBeenCalledTimes(1);
-        expect(mockCallTool).toHaveBeenCalledWith({ name: 'take_screenshot', arguments: {} }, {});
+      expect(callOrder).toEqual(['connect', 'callTool']);
+    });
+
+    it('should close client after calling tool', async () => {
+      const callOrder: string[] = [];
+
+      mockCallTool.mockImplementation(async () => {
+        callOrder.push('callTool');
+        return { result: 'success' };
       });
 
-      it('should NOT call take_snapshot for evaluate_script command', async () => {
-        await runCommand('evaluate_script', '{"expression": "document.title"}', null);
-
-        expect(mockCallTool).toHaveBeenCalledTimes(1);
-        expect(mockCallTool).toHaveBeenCalledWith(
-          { name: 'evaluate_script', arguments: { expression: 'document.title' } },
-          {}
-        );
+      mockClose.mockImplementation(async () => {
+        callOrder.push('close');
       });
 
-      it('should NOT log snapshot message for commands not requiring snapshot', async () => {
-        await runCommand('list_pages', null, null);
+      await runCommand('resolve-library-id', null, null);
 
-        expect(consoleLogSpy).not.toHaveBeenCalledWith('Taking snapshot before executing command...');
-      });
+      expect(callOrder).toEqual(['callTool', 'close']);
     });
   });
 });
