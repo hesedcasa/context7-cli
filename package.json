@@ -1,16 +1,19 @@
 {
   "name": "context7-cli",
   "version": "1.0.0",
-  "description": "CLI tool to connect and interact with Context7 MCP server for up-to-date code documentation",
+  "description": "CLI tool to connect and interact with Context7 MCP server for up-to-date code documentation, plus Conductor - an AI agent orchestrator for managing multiple Claude agents",
   "main": "dist/index.js",
   "bin": {
-    "context7-cli": "dist/index.js"
+    "context7-cli": "dist/index.js",
+    "conductor": "dist/conductor-cli.js"
   },
   "type": "module",
   "scripts": {
     "build": "tsc",
     "start": "tsx src/index.ts",
     "dev": "tsx src/index.ts",
+    "conductor": "tsx src/conductor-cli.ts",
+    "conductor:dev": "tsx src/conductor-cli.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
@@ -24,12 +27,24 @@
     "mcp",
     "documentation",
     "cli",
-    "upstash"
+    "upstash",
+    "conductor",
+    "ai-agents",
+    "claude",
+    "orchestration",
+    "agent-sdk"
   ],
   "author": "Hesed",
   "license": "Apache-2.0",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@anthropic-ai/claude-agent-sdk": "^0.1.44",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.5",
+    "@types/ws": "^8.18.1",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
